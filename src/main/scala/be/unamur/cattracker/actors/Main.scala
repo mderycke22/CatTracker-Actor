@@ -21,7 +21,8 @@ object Main {
     val remoteAddress = InetSocketAddress("localhost", 47474)
     val remoteMqtt = untypedSystem.actorOf(Props(RemoteMqtt(s"tcp://${mqttAddress}:${mqttPort}")))
     val networkSender = untypedSystem.actorOf(Props(NetworkSender(remoteAddress)), "NetworkSender")
-    val networkListener = untypedSystem.actorOf(Props(NetworkListener(networkSender, remoteMqtt)), "NetworkListener")
+    val databaseAccess = untypedSystem.actorOf(Props(DatabaseAccess()))
+    val networkListener = untypedSystem.actorOf(Props(NetworkListener(networkSender, remoteMqtt, databaseAccess)), "NetworkListener")
   }
 }
 
