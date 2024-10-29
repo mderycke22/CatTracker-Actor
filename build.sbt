@@ -14,6 +14,8 @@ resolvers += "Akka library repository".at("https://repo.akka.io/maven")
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-cluster-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test,
+  "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
+  "com.lightbend.akka" %% "akka-stream-alpakka-mqtt" % "8.0.0",
   "ch.qos.logback" % "logback-classic" % "1.5.6",
   "org.scalactic" %% "scalactic" % ScalaTestVersion,
   "org.scalatest" %% "scalatest" % ScalaTestVersion % "test"
