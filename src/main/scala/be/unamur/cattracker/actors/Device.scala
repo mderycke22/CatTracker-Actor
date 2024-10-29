@@ -28,7 +28,7 @@ private class Device(context: ActorContext[Device.Command], deviceId: String)
 
   private var lastTemperatureReading: Option[Double] = None
 
-  context.log.info("Device actor {}-{} started", deviceId)
+  context.log.info("Device actor {} started", deviceId)
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
@@ -46,7 +46,7 @@ private class Device(context: ActorContext[Device.Command], deviceId: String)
 
   override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
     case PostStop =>
-      context.log.info("Device actor {}-{} stopped", deviceId)
+      context.log.info("Device actor {} stopped", deviceId)
       this
   }
 

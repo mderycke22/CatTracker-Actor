@@ -9,6 +9,7 @@ class NetworkListener(nextActor: ActorRef) extends Actor {
   import context.system
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress("localhost", 47474))
 
+
   def receive: Receive = {
     case Udp.Bound(local) =>
       context.become(ready(sender()))
@@ -16,6 +17,7 @@ class NetworkListener(nextActor: ActorRef) extends Actor {
 
   private def ready(socket: ActorRef): Receive = {
     case Udp.Received(data, remote) =>
+      context.system.log.info("Data received: {}", data.decodeString("ISO-8859-1"))
       val processed = socket ! Udp.Send(data, remote) // Send UDP packet to the source
       // Insert into the DB...
       // Publish to MQTT...
