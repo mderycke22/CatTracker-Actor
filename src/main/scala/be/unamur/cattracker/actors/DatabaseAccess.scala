@@ -27,7 +27,9 @@ class DatabaseAccess extends Actor {
         case None => Float.MinValue
       }
 
-      val sensorValueRow = SensorValue("TestSensor",  sensorValue, LocalDateTime.now())
+      val valueUnit = "u" // TODO
+
+      val sensorValueRow = SensorValue("TestSensor", sensorValue, valueUnit, LocalDateTime.now())
       val insertSensorValueQuery = sensorValuesTable += sensorValueRow
       val insertResult: Future[Int] = db.run(insertSensorValueQuery)
 
