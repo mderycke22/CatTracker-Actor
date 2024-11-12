@@ -10,7 +10,7 @@ import spray.json.DefaultJsonProtocol.*
 
 
 trait ApiRoutes {
-  val apiRoutes: Route = path("movies" / "heartbeat") {
+  val apiRoutes: Route = path("api" / "test") {
     get {
       complete("Success")
     }
