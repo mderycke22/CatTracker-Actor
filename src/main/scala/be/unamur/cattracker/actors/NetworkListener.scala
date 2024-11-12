@@ -9,7 +9,6 @@ class NetworkListener(nextActor: ActorRef, mqttActor: ActorRef, databaseAccess: 
   import context.system
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress("localhost", 47474))
 
-
   def receive: Receive = {
     case Udp.Bound(local) =>
       context.become(ready(sender()))

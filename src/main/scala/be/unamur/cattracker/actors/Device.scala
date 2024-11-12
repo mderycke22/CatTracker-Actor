@@ -33,7 +33,7 @@ private class Device(context: ActorContext[Device.Command], deviceId: String)
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
       case RecordTemperature(id, value, replyTo) =>
-        context.log.info2("Recorded temperature reading {} with {}", value, id)
+        context.log.info("Recorded temperature reading {} with {}", value, id)
         lastTemperatureReading = Some(value)
         replyTo ! TemperatureRecorded(id)
         this

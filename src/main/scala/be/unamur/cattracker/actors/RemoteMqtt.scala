@@ -23,7 +23,6 @@ class RemoteMqtt(brokerUrl: String) extends Actor {
   )
   private val sink: Sink[MqttMessage, Future[Done]] = MqttSink(connectionSettings, MqttQoS.AtLeastOnce)
 
-
   def receive: Receive = {
     case data: ByteString =>
       try {
