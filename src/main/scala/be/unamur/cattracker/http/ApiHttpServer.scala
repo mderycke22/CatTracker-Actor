@@ -2,18 +2,17 @@ package be.unamur.cattracker.http
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.stream.ActorMaterializer
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.{ExecutionContext}
 
-class ApiHttpServer(implicit val system: ActorSystem, val ec: ExecutionContext) extends ApiRoutes {
+class ApiHttpServer(routes: ApiRoutes)(implicit val system: ActorSystem, val ec: ExecutionContext) {
   def startServer(httpPort: Int): Unit = {
-    val serverBinding = Http().newServerAt("localhost", httpPort).bind(apiRoutes)
+    val serverBinding = Http().newServerAt("localhost", httpPort).bind(routes.apiRoutes)
 
     serverBinding.map { binding =>
       system.log.info(s"HTTP server started on localhost:${binding.localAddress.getPort}")
     }.recover { case ex =>
-      system.log.error("Failed to start the server: " + ex.getMessage)
+      system.log.error(s"Failed to start the server: ${ex.getMessage}")
     }
   }
 }
