@@ -3,23 +3,23 @@ package be.unamur.cattracker.actors
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.actor.Actor
 import be.unamur.cattracker.model.{SensorValue, SensorValueTable}
+import be.unamur.cattracker.repositories.SensorBaseRepository
 import slick.jdbc.PostgresProfile.api.*
 
 import java.time.LocalDateTime
 import scala.concurrent.Future
-import scala.util.{Success, Failure}
+import scala.util.{Failure, Success}
 
 case class SQLSelect(data: String)
 case class SQLInsert(data: String)
 
-class DatabaseAccess extends Actor {
+class DatabaseAccess(sensorBaseRepository: SensorBaseRepository[SensorValue, Long]) extends Actor {
   import context.system
 
   private val db = Database.forConfig("cat-tracker.postgres")
   private val sensorValuesTable = TableQuery[SensorValueTable]
 
   def receive: Receive = {
-    // TODO: data should also contain the sensor type
     case SQLInsert(data: String) =>
       val splittedData = splitSensorData(data)
 
@@ -29,9 +29,7 @@ class DatabaseAccess extends Actor {
       }
 
       val sensorValueRow = SensorValue(splittedData("sensor"), sensorValue, splittedData("unit"), LocalDateTime.now())
-      val insertSensorValueQuery = sensorValuesTable += sensorValueRow
-      // TODO: use repository or service
-      val insertResult: Future[Int] = db.run(insertSensorValueQuery)
+      val insertResult: Future[Int] = sensorBaseRepository.save(sensorValueRow)
 
       insertResult.onComplete {
         case Success(s) => system.log.info(s"Sensor values inserted successfully: ${s}")

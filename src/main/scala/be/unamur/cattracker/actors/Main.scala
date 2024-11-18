@@ -30,7 +30,7 @@ object Main {
     val remoteAddress = InetSocketAddress("localhost", 47474)
     val remoteMqtt = actorSystem.actorOf(Props(RemoteMqtt(s"tcp://${mqttAddress}:${mqttPort}")))
     val networkSender = actorSystem.actorOf(Props(NetworkSender(remoteAddress)), "NetworkSender")
-    val databaseAccess = actorSystem.actorOf(Props(DatabaseAccess()))
+    val databaseAccess = actorSystem.actorOf(Props(DatabaseAccess(SensorRepositoryImpl(db))))
     val networkListener = actorSystem.actorOf(Props(NetworkListener(networkSender, remoteMqtt, databaseAccess)), "NetworkListener")
 
     // Http
