@@ -3,7 +3,7 @@ package be.unamur.cattracker.actors
 import akka.actor.{ActorSystem, Props}
 import akka.actor.typed.ActorSystem as TypedActorSystem
 import akka.http.scaladsl.Http
-import be.unamur.cattracker.actors.{NetworkListener, NetworkSender}
+import be.unamur.cattracker.actors.{NetworkListenerActor, NetworkSenderActor}
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.PostgresProfile.api.*
 
@@ -28,10 +28,10 @@ object Main {
     //val typedSystem: TypedActorSystem[Device.Command] = TypedActorSystem(Device("device-1"), "DeviceSystem")
     implicit val actorSystem: ActorSystem = ActorSystem("CatTrackerSystem")
     val remoteAddress = InetSocketAddress("localhost", 47474)
-    val remoteMqtt = actorSystem.actorOf(Props(RemoteMqtt(s"tcp://${mqttAddress}:${mqttPort}")))
-    val networkSender = actorSystem.actorOf(Props(NetworkSender(remoteAddress)), "NetworkSender")
+    val remoteMqtt = actorSystem.actorOf(Props(RemoteMqttActor(s"tcp://${mqttAddress}:${mqttPort}")))
+    val networkSender = actorSystem.actorOf(Props(NetworkSenderActor(remoteAddress)), "NetworkSender")
     val databaseAccess = actorSystem.actorOf(Props(DatabaseAccess(SensorRepositoryImpl(db))))
-    val networkListener = actorSystem.actorOf(Props(NetworkListener(networkSender, remoteMqtt, databaseAccess)), "NetworkListener")
+    val networkListener = actorSystem.actorOf(Props(NetworkListenerActor(networkSender, remoteMqtt, databaseAccess)), "NetworkListener")
 
     // Http
     val sensorService = SensorService(SensorRepositoryImpl(db))

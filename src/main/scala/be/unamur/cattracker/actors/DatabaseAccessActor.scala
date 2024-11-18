@@ -4,7 +4,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import akka.actor.Actor
 import be.unamur.cattracker.model.{SensorValue, SensorValueTable}
 import be.unamur.cattracker.repositories.SensorBaseRepository
-import slick.jdbc.PostgresProfile.api.*
 
 import java.time.LocalDateTime
 import scala.concurrent.Future
@@ -14,10 +13,8 @@ case class SQLSelect(data: String)
 case class SQLInsert(data: String)
 
 class DatabaseAccess(sensorBaseRepository: SensorBaseRepository[SensorValue, Long]) extends Actor {
+  // Does it need to be an actor ?
   import context.system
-
-  private val db = Database.forConfig("cat-tracker.postgres")
-  private val sensorValuesTable = TableQuery[SensorValueTable]
 
   def receive: Receive = {
     case SQLInsert(data: String) =>

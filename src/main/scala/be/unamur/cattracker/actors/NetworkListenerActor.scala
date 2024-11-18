@@ -5,7 +5,7 @@ import akka.io.{IO, Udp}
 
 import java.net.InetSocketAddress
 
-class NetworkListener(nextActor: ActorRef, mqttActor: ActorRef, databaseAccess: ActorRef) extends Actor {
+class NetworkListenerActor(nextActor: ActorRef, mqttActor: ActorRef, databaseAccess: ActorRef) extends Actor {
   import context.system
   IO(Udp) ! Udp.Bind(self, new InetSocketAddress("localhost", 47474))
 

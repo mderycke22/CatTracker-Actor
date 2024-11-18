@@ -6,7 +6,7 @@ import akka.util.ByteString
 
 import java.net.InetSocketAddress
 
-class NetworkSender(remote: InetSocketAddress) extends Actor {
+class NetworkSenderActor(remote: InetSocketAddress) extends Actor {
   import context.system
   IO(Udp) ! Udp.SimpleSender
 

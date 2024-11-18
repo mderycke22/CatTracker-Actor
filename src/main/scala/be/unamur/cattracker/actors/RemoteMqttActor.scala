@@ -13,7 +13,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
 
 import scala.concurrent.Future
 
-class RemoteMqtt(brokerUrl: String) extends Actor {
+class RemoteMqttActor(brokerUrl: String) extends Actor {
   import context.system
 
   private val connectionSettings = MqttConnectionSettings(
