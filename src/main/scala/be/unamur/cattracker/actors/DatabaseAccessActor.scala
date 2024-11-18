@@ -13,7 +13,6 @@ case class SQLSelect(data: String)
 case class SQLInsert(data: String)
 
 class DatabaseAccess(sensorBaseRepository: SensorBaseRepository[SensorValue, Long]) extends Actor {
-  // Does it need to be an actor ?
   import context.system
 
   def receive: Receive = {

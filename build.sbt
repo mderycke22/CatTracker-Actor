@@ -11,6 +11,7 @@ lazy val root = (project in file("."))
   )
 
 resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-cluster-typed" % AkkaVersion,
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test,
@@ -18,7 +19,7 @@ libraryDependencies ++= Seq(
   "com.lightbend.akka" %% "akka-stream-alpakka-mqtt" % "8.0.0",
   "com.lightbend.akka" %% "akka-stream-alpakka-slick" % "8.0.0",
   "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
-  "ch.qos.logback" % "logback-classic" % "1.5.6",
+  "ch.qos.logback" % "logback-classic" % "1.5.12",
   "org.scalactic" %% "scalactic" % ScalaTestVersion,
   "com.typesafe.akka" %% "akka-http" % "10.7.0",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.7.0",
