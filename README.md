@@ -20,6 +20,8 @@ persistence_location /mosquitto/data/
 log_dest file /mosquitto/log/mosquitto.log
 allow_anonymous true
 listener 1883
+listener 8080
+protocol websockets
 ```
-4. Run ``docker run -it -p 1883:1883 -v "$PWD/mosquitto/config:/mosquitto/config" eclipse-mosquitto``
+4. Run ``docker run -it -p 1883:1883 -p 8080 -v "$PWD/mosquitto/config:/mosquitto/config" eclipse-mosquitto``
 5. Use MQTTX to monitor the connections
