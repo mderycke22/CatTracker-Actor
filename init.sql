@@ -10,6 +10,6 @@ CREATE TABLE sensor_values (
 CREATE TABLE dispenser_schedule (
     id BIGSERIAL PRIMARY KEY,
     distribution_time TIME NOT NULL,
-    label VARCHAR(64),
+    label VARCHAR(64) UNIQUE,
     is_active BOOLEAN NOT NULL
 )
