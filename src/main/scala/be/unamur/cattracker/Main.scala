@@ -1,19 +1,15 @@
-package be.unamur.cattracker.actors
+package be.unamur.cattracker
 
-import akka.actor.{ActorSystem, Props}
 import akka.actor.typed.ActorSystem as TypedActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
-import be.unamur.cattracker.actors.{NetworkListenerActor, NetworkSenderActor}
+import be.unamur.cattracker.actors.{DatabaseAccessActor, NetworkListenerActor, NetworkSenderActor, RemoteMqttActor}
+import be.unamur.cattracker.http.{ApiHttpServer, ApiRoutes, DispenserScheduleService, SensorService}
+import be.unamur.cattracker.repositories.{DispenserScheduleRepositoryImpl, SensorRepositoryImpl}
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.PostgresProfile.api.*
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import java.net.InetSocketAddress
-import scala.util.{Failure, Success}
-import akka.actor.ActorSystem
-import be.unamur.cattracker.http.{ApiHttpServer, ApiRoutes, DispenserScheduleService, SensorService}
-import be.unamur.cattracker.repositories.{DispenserScheduleRepositoryImpl, SensorRepositoryImpl}
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.*
 

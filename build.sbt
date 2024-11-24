@@ -26,3 +26,9 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
   "org.postgresql" % "postgresql" % "42.7.3"
 )
+
+
+assemblyMergeStrategy in assembly := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
