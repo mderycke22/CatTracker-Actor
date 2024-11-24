@@ -4,7 +4,7 @@ import slick.jdbc.PostgresProfile.api.*
 
 import java.time.LocalTime
 
-class DispenserScheduleTable(tag: Tag) extends Table[DispenserSchedule](tag, "sensor_values") {
+class DispenserScheduleTable(tag: Tag) extends Table[DispenserSchedule](tag, "dispenser_schedule") {
   override def * = (distributionTime, label, isActive).mapTo[DispenserSchedule]
   def id: Rep[Long] = column[Long]("id", O.PrimaryKey, O.AutoInc)
   def distributionTime: Rep[LocalTime] = column[LocalTime]("distribution_time")

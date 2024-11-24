@@ -2,17 +2,17 @@ package be.unamur.cattracker.actors
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.actor.Actor
-import be.unamur.cattracker.model.{SensorValue, SensorValueTable}
-import be.unamur.cattracker.repositories.SensorBaseRepository
+import be.unamur.cattracker.model.{DispenserSchedule, SensorValue, SensorValueTable}
+import be.unamur.cattracker.repositories.{DispenserScheduleBaseRepository, SensorBaseRepository}
 
 import java.time.LocalDateTime
-import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-case class SQLSelect(data: String)
-case class SQLInsert(data: String)
+case class SQLSelectSensors(sensorType: String, start: LocalDateTime, end: LocalDateTime)
+case class SQLSelectDispenserSchedule(label: String)
+case class SQLInsert(data: Any)
 
-class DatabaseAccess(sensorBaseRepository: SensorBaseRepository[SensorValue, Long]) extends Actor {
+class DatabaseAccessActor(sensorBaseRepository: SensorBaseRepository[SensorValue, Long]) extends Actor {
   import context.system
 
   def receive: Receive = {
@@ -25,9 +25,8 @@ class DatabaseAccess(sensorBaseRepository: SensorBaseRepository[SensorValue, Lon
       }
 
       val sensorValueRow = SensorValue(splittedData("sensor"), sensorValue, splittedData("unit"), LocalDateTime.now())
-      val insertResult: Future[Int] = sensorBaseRepository.save(sensorValueRow)
 
-      insertResult.onComplete {
+      sensorBaseRepository.save(sensorValueRow).onComplete {
         case Success(s) => system.log.info(s"Sensor values inserted successfully: ${s}")
         case Failure(t) => system.log.error(s"Error while inserting sensor values: ${t}")
       }

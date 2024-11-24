@@ -1,6 +1,6 @@
 package be.unamur.cattracker.http
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import be.unamur.cattracker.model.SensorValue
 import be.unamur.cattracker.repositories.SensorBaseRepository
 

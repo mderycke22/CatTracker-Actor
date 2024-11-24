@@ -11,8 +11,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import java.net.InetSocketAddress
 import scala.util.{Failure, Success}
 import akka.actor.ActorSystem
-import be.unamur.cattracker.http.{ApiHttpServer, ApiRoutes, SensorService}
-import be.unamur.cattracker.repositories.SensorRepositoryImpl
+import be.unamur.cattracker.http.{ApiHttpServer, ApiRoutes, DispenserScheduleService, SensorService}
+import be.unamur.cattracker.repositories.{DispenserScheduleRepositoryImpl, SensorRepositoryImpl}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.*
@@ -30,12 +30,13 @@ object Main {
     val remoteAddress = InetSocketAddress("localhost", 47474)
     val remoteMqtt = actorSystem.actorOf(Props(RemoteMqttActor(s"tcp://${mqttAddress}:${mqttPort}")))
     val networkSender = actorSystem.actorOf(Props(NetworkSenderActor(remoteAddress)), "NetworkSender")
-    val databaseAccess = actorSystem.actorOf(Props(DatabaseAccess(SensorRepositoryImpl(db))))
+    val databaseAccess = actorSystem.actorOf(Props(DatabaseAccessActor(SensorRepositoryImpl(db))))
     val networkListener = actorSystem.actorOf(Props(NetworkListenerActor(networkSender, remoteMqtt, databaseAccess)), "NetworkListener")
 
     // Http
+    val dispenserScheduleService = DispenserScheduleService(DispenserScheduleRepositoryImpl(db))
     val sensorService = SensorService(SensorRepositoryImpl(db))
-    val apiRoutes = ApiRoutes(sensorService)
+    val apiRoutes = ApiRoutes(sensorService, dispenserScheduleService)
     val httpServer = ApiHttpServer(apiRoutes)
     
     httpServer.startServer(httpPort)

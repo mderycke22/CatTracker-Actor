@@ -21,10 +21,13 @@ trait BaseRepository[Entity, Id] {
  * This could be useful since it makes the code more flexible about the database implementation (we are not
  * depending on a specific database implementation).
  *
- * @tparam Entity the entity type (could change)
+ * @tparam Entity the entity type (could change depending on the database implementation)
  * @tparam Id the id type
  */
 trait SensorBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
-  // TODO: what do we need ?
   def findForSensorBetween(sensor: String, start: LocalDateTime, end: LocalDateTime): Future[Seq[Entity]]
+}
+
+trait DispenserScheduleBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
+  def findByLabelContains(label: String): Future[Seq[Entity]]
 }
