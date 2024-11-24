@@ -1,6 +1,9 @@
-version: '3.9'
-
 services:
+  scala-api:
+    build:
+      dockerfile: ./Dockerfile
+      network: host
+    network_mode: "host"
 
   db:
     image: postgres
