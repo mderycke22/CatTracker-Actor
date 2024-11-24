@@ -6,3 +6,9 @@ CREATE TABLE sensor_values (
     recorded_at TIMESTAMP NOT NULL,
     value_unit VARCHAR(8)
 );
+
+CREATE TABLE dispenser_schedule (
+    id BIGSERIAL PRIMARY KEY,
+    distribution_time TIME,
+    label VARCHAR(64)
+)
