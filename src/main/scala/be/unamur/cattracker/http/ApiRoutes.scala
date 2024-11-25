@@ -66,25 +66,25 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
   import SensorValueFormat._
   import DispenserScheduleFormat._
 
-  val apiRoutes: Route =
+  val apiRoutes: Route = cors() {
     path("api" / "sensor_values" / Segment) { sensorType =>
       get {
-          parameters("start_date", "end_date") { (startDateStr, endDateStr) =>
-            try {
-              // Format yyyy-MM-ddTHH:mm:ss
-              val startDate = LocalDateTime.parse(startDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-              val endDate = LocalDateTime.parse(endDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        parameters("start_date", "end_date") { (startDateStr, endDateStr) =>
+          try {
+            // Format yyyy-MM-ddTHH:mm:ss
+            val startDate = LocalDateTime.parse(startDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            val endDate = LocalDateTime.parse(endDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
 
-              complete {
-                sensorService.getAllSensorValuesBetween(sensorType, startDate, endDate).map { sensorValues =>
-                  sensorValues.toJson
-                }
+            complete {
+              sensorService.getAllSensorValuesBetween(sensorType, startDate, endDate).map { sensorValues =>
+                sensorValues.toJson
               }
-            } catch {
-              case e: DateTimeParseException =>
-                complete(StatusCodes.BadRequest, "Invalid date format")
             }
+          } catch {
+            case e: DateTimeParseException =>
+              complete(StatusCodes.BadRequest, "Invalid date format")
           }
+        }
       }
     } ~ path("api" / "dispenser_schedules") {
       concat(get {
@@ -104,14 +104,17 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
           }
         }
       },
-      post {
-        entity(as[DispenserSchedule]) { ds =>
-          complete {
-            dispenserScheduleService.addDispenserSchedule(ds).map { i =>
-              "Dispenser schedule inserted successfully"
+        post {
+          entity(as[DispenserSchedule]) { ds =>
+            complete {
+              dispenserScheduleService.addDispenserSchedule(ds).map { i =>
+                "Dispenser schedule inserted successfully"
+              }
             }
           }
-        }
-      })
+        })
     }
+  }
+
+    
 }
