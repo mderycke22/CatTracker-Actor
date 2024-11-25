@@ -1,7 +1,7 @@
 package be.unamur.cattracker.http
 
 import akka.actor.ActorSystem
-import be.unamur.cattracker.model.DispenserSchedule
+import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO}
 import be.unamur.cattracker.repositories.DispenserScheduleBaseRepository
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -29,7 +29,7 @@ class DispenserScheduleService(dispenserScheduleRepository: DispenserScheduleBas
             ds
           }
           .recover { case t: Throwable =>
-            system.log.error(s"Couldn't insert the sensor value: $t")
+            system.log.error(s"Couldn't insert the dispenser schedule: $t")
             Seq.empty[DispenserSchedule]
           }
       }
@@ -41,18 +41,30 @@ class DispenserScheduleService(dispenserScheduleRepository: DispenserScheduleBas
         i
       }
       .recover { case t: Throwable =>
-        system.log.error(s"Couldn't insert the sensor value: $t")
+        system.log.error(s"Couldn't insert the dispenser schedule: $t")
         0
       }
   }
-  
-  def updateDispenserSchedule(id: Long, dispenserSchedule: DispenserSchedule): Future[Int] = {
-    dispenserScheduleRepository.update(id, dispenserSchedule).map { i =>
+
+  def updateDispenserSchedule(id: Long, dto: DispenserScheduleUpdateDTO): Future[Int] = {
+    
+    dispenserScheduleRepository.update(id, DispenserSchedule(id, dto.distributionTime, dto.kibblesAmountValue, dto.label, dto.isActive)).map { i =>
         system.log.info(s"Dispenser schedule updated successfully ($i value updated)")
         i
       }
       .recover { case t: Throwable =>
-        system.log.error(s"Couldn't update the sensor value: $t")
+        system.log.error(s"Couldn't update the dispenser schedule: $t")
+        0
+      }
+  }
+
+  def deleteDispenserSchedule(id: Long): Future[Int] = {
+    dispenserScheduleRepository.delete(id).map { i =>
+        system.log.info(s"Dispenser schedule deleted successfully ($i value deleted)")
+        i
+      }
+      .recover { case t: Throwable =>
+        system.log.error(s"Couldn't delete the dispenser schedule: $t")
         0
       }
   }

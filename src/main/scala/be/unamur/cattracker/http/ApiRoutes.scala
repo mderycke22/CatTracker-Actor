@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{Directives, Route}
 import spray.json.DefaultJsonProtocol.*
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import be.unamur.cattracker.model.{DispenserSchedule, SensorValue}
+import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
 import spray.json.DefaultJsonProtocol.*
 import spray.json.RootJsonFormat
 import spray.json.*
@@ -59,13 +59,18 @@ object SensorValueFormat extends SprayJsonSupport with DefaultJsonProtocol {
 }
 
 object DispenserScheduleFormat extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val dispenserValueFormat: RootJsonFormat[DispenserSchedule] = jsonFormat4(DispenserSchedule)
+  implicit val dispenserValueFormat: RootJsonFormat[DispenserSchedule] = jsonFormat5(DispenserSchedule)
+}
+
+object DispenserScheduleUpdateDTOFormat extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val dispenserValueFormat: RootJsonFormat[DispenserScheduleUpdateDTO] = jsonFormat4(DispenserScheduleUpdateDTO)
 }
 
 class ApiRoutes(sensorService: SensorService, dispenserScheduleService: DispenserScheduleService)(implicit ec: ExecutionContext) {
   import akka.http.scaladsl.server.Directives._
   import SensorValueFormat._
   import DispenserScheduleFormat._
+  import DispenserScheduleUpdateDTOFormat._
 
   val apiRoutes: Route =
     path("api" / "sensor_values" / Segment) { sensorType =>
@@ -116,18 +121,30 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
       })
     } ~ path("api" / "dispenser_schedules" / Segment) { id =>
       concat(put {
-        entity(as[DispenserSchedule]) { ds =>
+        entity(as[DispenserScheduleUpdateDTO]) { ds =>
           Try(id.toLong).toOption match {
             case Some(_) =>
               complete {
                 dispenserScheduleService.updateDispenserSchedule(id.toLong, ds).map { i =>
-                  "Dispenser schedule updated successfully"
+                  s"Dispenser schedule ${id} updated successfully"
                 }
               }
             case None =>
               complete(StatusCodes.BadRequest, "Invalid id")
           }
         }
-      })
+      },
+        delete {
+          Try(id.toLong).toOption match {
+            case Some(_) =>
+              complete {
+                dispenserScheduleService.deleteDispenserSchedule(id.toLong).map { i =>
+                  s"Dispenser schedule ${id} deleted successfully"
+                }
+              }
+            case None =>
+              complete(StatusCodes.BadRequest, "Invalid id")
+          }
+        })
     }
 }

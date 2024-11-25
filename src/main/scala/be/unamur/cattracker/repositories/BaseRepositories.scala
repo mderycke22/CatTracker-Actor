@@ -1,7 +1,7 @@
 package be.unamur.cattracker.repositories
 
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, LocalTime}
 import scala.concurrent.Future
 
 /**
