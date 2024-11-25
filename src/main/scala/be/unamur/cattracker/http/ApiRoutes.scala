@@ -119,15 +119,6 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             }
           }
         })
-      post {
-        entity(as[DispenserSchedule]) { ds =>
-          complete {
-            dispenserScheduleService.addDispenserSchedule(ds).map { i =>
-              "Dispenser schedule inserted successfully"
-            }
-          }
-        }
-      })
     } ~ path("api" / "dispenser_schedules" / Segment) { id =>
       concat(put {
         entity(as[DispenserScheduleUpdateDTO]) { ds =>
