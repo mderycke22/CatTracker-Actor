@@ -30,4 +30,5 @@ trait SensorBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
 
 trait DispenserScheduleBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
   def findByLabelContains(label: String): Future[Seq[Entity]]
+  def update(id: Long, entity: Entity): Future[Int]
 }

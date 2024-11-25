@@ -18,6 +18,7 @@ import be.unamur.cattracker.http.LocalTimeJsonProtocol.LocalTimeFormat
 import java.time.{LocalDateTime, LocalTime}
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 
 /**
@@ -110,6 +111,21 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             dispenserScheduleService.addDispenserSchedule(ds).map { i =>
               "Dispenser schedule inserted successfully"
             }
+          }
+        }
+      })
+    } ~ path("api" / "dispenser_schedules" / Segment) { id =>
+      concat(put {
+        entity(as[DispenserSchedule]) { ds =>
+          Try(id.toLong).toOption match {
+            case Some(_) =>
+              complete {
+                dispenserScheduleService.updateDispenserSchedule(id.toLong, ds).map { i =>
+                  "Dispenser schedule updated successfully"
+                }
+              }
+            case None =>
+              complete(StatusCodes.BadRequest, "Invalid id")
           }
         }
       })

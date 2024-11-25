@@ -26,4 +26,11 @@ class DispenserScheduleRepositoryImpl(db: Database)
 
   override def delete(id: Long): Future[Int] =
     db.run(dispenserScheduleTable.filter(_.id === id).delete)
+
+  override def update(id: Long, entity: DispenserSchedule): Future[Int] = {
+    val query = for {
+      ds <- dispenserScheduleTable.filter(_.id === id).update(entity)
+    } yield ds
+    db.run(query)
+  }
 }

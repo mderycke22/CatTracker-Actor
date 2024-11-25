@@ -13,4 +13,4 @@ CREATE TABLE dispenser_schedule (
     label VARCHAR(64) UNIQUE NOT NULL,
     kibbles_amount_value INTEGER NOT NULL,
     is_active BOOLEAN NOT NULL
-)
+);

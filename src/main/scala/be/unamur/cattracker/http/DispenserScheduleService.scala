@@ -45,4 +45,15 @@ class DispenserScheduleService(dispenserScheduleRepository: DispenserScheduleBas
         0
       }
   }
+  
+  def updateDispenserSchedule(id: Long, dispenserSchedule: DispenserSchedule): Future[Int] = {
+    dispenserScheduleRepository.update(id, dispenserSchedule).map { i =>
+        system.log.info(s"Dispenser schedule updated successfully ($i value updated)")
+        i
+      }
+      .recover { case t: Throwable =>
+        system.log.error(s"Couldn't update the sensor value: $t")
+        0
+      }
+  }
 }
