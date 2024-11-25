@@ -1,7 +1,7 @@
 package be.unamur.cattracker.repositories
 
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, LocalTime}
 import scala.concurrent.Future
 
 /**
@@ -30,4 +30,5 @@ trait SensorBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
 
 trait DispenserScheduleBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
   def findByLabelContains(label: String): Future[Seq[Entity]]
+  def update(id: Long, entity: Entity): Future[Int]
 }
