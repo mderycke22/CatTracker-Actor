@@ -58,7 +58,7 @@ object SensorValueFormat extends SprayJsonSupport with DefaultJsonProtocol {
 }
 
 object DispenserScheduleFormat extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val dispenserValueFormat: RootJsonFormat[DispenserSchedule] = jsonFormat3(DispenserSchedule)
+  implicit val dispenserValueFormat: RootJsonFormat[DispenserSchedule] = jsonFormat4(DispenserSchedule)
 }
 
 class ApiRoutes(sensorService: SensorService, dispenserScheduleService: DispenserScheduleService)(implicit ec: ExecutionContext) {
@@ -86,7 +86,7 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             }
           }
       }
-    } ~ path("api" / "distribution_schedules") {
+    } ~ path("api" / "dispenser_schedules") {
       concat(get {
         parameters("label_contains".optional) { labelContains =>
           complete {
