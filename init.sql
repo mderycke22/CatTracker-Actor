@@ -11,6 +11,5 @@ CREATE TABLE dispenser_schedule (
     id BIGSERIAL PRIMARY KEY,
     distribution_time TIME NOT NULL,
     label VARCHAR(64) UNIQUE NOT NULL,
-    kibbles_amount_value INTEGER NOT NULL,
-    is_active BOOLEAN NOT NULL
+    kibbles_amount_value INTEGER NOT NULL
 );
