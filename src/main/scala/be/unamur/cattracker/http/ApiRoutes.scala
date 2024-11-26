@@ -59,11 +59,11 @@ object SensorValueFormat extends SprayJsonSupport with DefaultJsonProtocol {
 }
 
 object DispenserScheduleFormat extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val dispenserValueFormat: RootJsonFormat[DispenserSchedule] = jsonFormat5(DispenserSchedule)
+  implicit val dispenserValueFormat: RootJsonFormat[DispenserSchedule] = jsonFormat4(DispenserSchedule)
 }
 
 object DispenserScheduleUpdateDTOFormat extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit val dispenserValueFormat: RootJsonFormat[DispenserScheduleUpdateDTO] = jsonFormat4(DispenserScheduleUpdateDTO)
+  implicit val dispenserValueFormat: RootJsonFormat[DispenserScheduleUpdateDTO] = jsonFormat3(DispenserScheduleUpdateDTO)
 }
 
 class ApiRoutes(sensorService: SensorService, dispenserScheduleService: DispenserScheduleService)(implicit ec: ExecutionContext) {
@@ -75,15 +75,31 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
   val apiRoutes: Route = cors() {
     path("api" / "sensor_values" / Segment) { sensorType =>
       get {
-        parameters("start_date", "end_date") { (startDateStr, endDateStr) =>
+        parameters("start_date".optional, "end_date".optional) { (startDateStr, endDateStr) =>
           try {
+
             // Format yyyy-MM-ddTHH:mm:ss
-            val startDate = LocalDateTime.parse(startDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-            val endDate = LocalDateTime.parse(endDateStr, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            val startDateOpt = startDateStr.flatMap(str => Try(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)).toOption)
+            val endDateOpt = endDateStr.flatMap(str => Try(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)).toOption)
 
             complete {
-              sensorService.getAllSensorValuesBetween(sensorType, startDate, endDate).map { sensorValues =>
-                sensorValues.toJson
+              (startDateOpt, endDateOpt) match {
+                case (Some(startDate), Some(endDate)) =>
+                  sensorService.getAllSensorValuesBetween(sensorType, startDate, endDate).map { sensorValues =>
+                    sensorValues.toJson
+                  }
+                case (Some(startDate), None) =>
+                  sensorService.getAllSensorValuesBetween(sensorType, startDate, LocalDateTime.now()).map { sensorValues =>
+                    sensorValues.toJson
+                  }
+                case (None, Some(endDate)) =>
+                  sensorService.getAllSensorValuesBetween(sensorType, LocalDateTime.MIN, endDate).map { sensorValues =>
+                    sensorValues.toJson
+                  }
+                case _ =>
+                  sensorService.getAllSensorValues(sensorType).map { sensorValues =>
+                    sensorValues.toJson
+                  }
               }
             }
           } catch {

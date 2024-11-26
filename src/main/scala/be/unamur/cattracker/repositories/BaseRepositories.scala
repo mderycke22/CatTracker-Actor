@@ -26,6 +26,7 @@ trait BaseRepository[Entity, Id] {
  */
 trait SensorBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {
   def findForSensorBetween(sensor: String, start: LocalDateTime, end: LocalDateTime): Future[Seq[Entity]]
+  def findForSensor(sensor: String): Future[Seq[Entity]]
 }
 
 trait DispenserScheduleBaseRepository[Entity, Id] extends BaseRepository[Entity, Id] {

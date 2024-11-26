@@ -29,4 +29,9 @@ class SensorRepositoryImpl(db: Database)(implicit ec: ExecutionContext) extends 
     ) yield record
     db.run(query.result)
   }
+
+  override def findForSensor(sensor: String): Future[Seq[SensorValue]] = {
+    val query = sensorValuesTable.filter(_.sensorType === sensor)
+    db.run(query.result)
+  }
 }
