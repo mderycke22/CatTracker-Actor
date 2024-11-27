@@ -1,11 +1,11 @@
 package be.unamur.cattracker.http
 
-import akka.actor.ActorSystem
+import akka.actor.typed.*
 import akka.http.scaladsl.Http
 
-import scala.concurrent.{ExecutionContext}
+import scala.concurrent.ExecutionContext
 
-class ApiHttpServer(routes: ApiRoutes)(implicit val system: ActorSystem, val ec: ExecutionContext) {
+class ApiHttpServer(routes: ApiRoutes)(implicit val system: ActorSystem[Nothing], val ec: ExecutionContext) {
   def startServer(httpPort: Int): Unit = {
     val serverBinding = Http().newServerAt("localhost", httpPort).bind(routes.apiRoutes)
 

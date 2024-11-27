@@ -1,5 +1,7 @@
 package be.unamur.cattracker.http
 
+
+import akka.actor.typed.ActorRef
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
 import akka.http.scaladsl.model.*
@@ -8,6 +10,9 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{Directives, Route}
 import spray.json.DefaultJsonProtocol.*
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import be.unamur.cattracker.actors.DispenserScheduleDbActor.DispenserScheduleDbCommand
+import be.unamur.cattracker.actors.SensorValueDbActor
+import be.unamur.cattracker.actors.SensorValueDbActor.SensorValueDbCommand
 import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
 import spray.json.DefaultJsonProtocol.*
 import spray.json.RootJsonFormat
