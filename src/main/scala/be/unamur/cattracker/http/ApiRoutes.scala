@@ -1,25 +1,25 @@
 package be.unamur.cattracker.http
 
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
-import akka.http.scaladsl.model.*
-import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.server.{Directives, Route}
-import spray.json.DefaultJsonProtocol.*
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
-import spray.json.DefaultJsonProtocol.*
-import spray.json.RootJsonFormat
-import spray.json.*
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.server.Directives.*
+import akka.http.scaladsl.server.Route
 import be.unamur.cattracker.http.LocalDateTimeJsonProtocol.LocalDateTimeFormat
 import be.unamur.cattracker.http.LocalTimeJsonProtocol.LocalTimeFormat
+import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import com.typesafe.config.ConfigFactory
+import spray.json.*
 
-import java.time.{LocalDateTime, LocalTime}
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.{LocalDateTime, LocalTime}
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
+
+//val corsSettings: CorsSettings = CorsSettings.defaultSettings
+//  .withAllowedMethods(Seq(GET, POST, PUT, DELETE, OPTIONS))
+//  .withAllowedOrigins(HttpOriginMatcher.*)
 
 /**
  * Used to serialize / deserialize the LocalDateTime type
@@ -67,12 +67,15 @@ object DispenserScheduleUpdateDTOFormat extends SprayJsonSupport with DefaultJso
 }
 
 class ApiRoutes(sensorService: SensorService, dispenserScheduleService: DispenserScheduleService)(implicit ec: ExecutionContext) {
-  import akka.http.scaladsl.server.Directives._
-  import SensorValueFormat._
-  import DispenserScheduleFormat._
-  import DispenserScheduleUpdateDTOFormat._
 
-  val apiRoutes: Route = cors() {
+  import DispenserScheduleFormat.*
+  import DispenserScheduleUpdateDTOFormat.*
+  import SensorValueFormat.*
+  import ch.megard.akka.http.cors.scaladsl.CorsDirectives.*
+
+  private val corsSettings: CorsSettings = CorsSettings(ConfigFactory.load())
+
+  val apiRoutes: Route = cors(corsSettings) {
     path("api" / "sensor_values" / Segment) { sensorType =>
       get {
         parameters("start_date".optional, "end_date".optional) { (startDateStr, endDateStr) =>
