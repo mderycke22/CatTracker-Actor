@@ -117,22 +117,14 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
       concat(get {
         parameters("label_contains".optional) { labelContains =>
           complete {
-            labelContains match {
-              case Some(value) =>
-                dispenserScheduleService.getDispenserSchedules(value).map { dispenserSchedules =>
-                  dispenserSchedules.toJson
-                }
-              case None =>
-                dispenserScheduleService.getDispenserSchedules(null).map { dispenserSchedules =>
-                  dispenserSchedules.toJson
-                }
+            dispenserScheduleService.getDispenserSchedules(labelContains).map { dispenserSchedules =>
+              dispenserSchedules.toJson
             }
-
           }
         }
       },
         post {
-          entity(as[DispenserSchedule]) { ds =>
+          entity(as[DispenserScheduleUpdateDTO]) { ds =>
             complete {
               dispenserScheduleService.addDispenserSchedule(ds).map { i =>
                 "Dispenser schedule inserted successfully"
