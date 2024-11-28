@@ -17,6 +17,7 @@ object Main {
   private final val conf = ConfigFactory.load()
   private val mqttPort = conf.getLong("cat-tracker.mqtt.port")
   private val mqttAddress = conf.getString("cat-tracker.mqtt.ip")
+  private val httpAddress = conf.getString("cat-tracker.http.ip")
   private val httpPort = conf.getInt("cat-tracker.http.port")
   private val db = Database.forConfig("cat-tracker.postgres")
 
@@ -35,7 +36,7 @@ object Main {
     val apiRoutes = ApiRoutes(sensorService, dispenserScheduleService)
     val httpServer = ApiHttpServer(apiRoutes)
     
-    httpServer.startServer(httpPort)
+    httpServer.startServer(httpAddress, httpPort)
   }
 }
 

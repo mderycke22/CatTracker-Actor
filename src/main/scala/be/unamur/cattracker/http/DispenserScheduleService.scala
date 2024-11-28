@@ -48,7 +48,7 @@ class DispenserScheduleService(dispenserScheduleRepository: DispenserScheduleBas
 
   def updateDispenserSchedule(id: Long, dto: DispenserScheduleUpdateDTO): Future[Int] = {
     
-    dispenserScheduleRepository.update(id, DispenserSchedule(id, dto.distributionTime, dto.kibblesAmountValue, dto.label, dto.isActive)).map { i =>
+    dispenserScheduleRepository.update(id, DispenserSchedule(id, dto.distributionTime, dto.kibblesAmountValue, dto.label)).map { i =>
         system.log.info(s"Dispenser schedule updated successfully ($i value updated)")
         i
       }

@@ -22,6 +22,18 @@ class SensorService(sensorBaseRepository: SensorBaseRepository[SensorValue, Long
       }
   }
 
+  def getAllSensorValues(sensorType: String): Future[Seq[SensorValue]] = {
+    sensorBaseRepository.findAll()
+      .map { s =>
+        system.log.info(s"Sensor values retrieved successfully")
+        s
+      }
+      .recover { case t: Throwable =>
+        system.log.error(s"Error getting the sensor values: $t")
+        Seq.empty[SensorValue]
+      }
+  }
+
   def addSensorValue(sensorValue: SensorValue): Future[Int] = {
     sensorBaseRepository.save(sensorValue)
       .map { i =>
