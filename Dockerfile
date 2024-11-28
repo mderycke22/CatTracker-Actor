@@ -18,7 +18,6 @@ RUN sbt assembly
 EXPOSE 47474
 EXPOSE 8081
 EXPOSE 1883
-EXPOSE 5432
 
 # set command for the image
 CMD ["scala", "target/scala-3.3.4/CatTracker-Backend-assembly-0.1.0-SNAPSHOT.jar", "--main-class", "be.unamur.cattracker.Main"]
