@@ -16,11 +16,6 @@ import java.time.{LocalDateTime, LocalTime}
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-
-//val corsSettings: CorsSettings = CorsSettings.defaultSettings
-//  .withAllowedMethods(Seq(GET, POST, PUT, DELETE, OPTIONS))
-//  .withAllowedOrigins(HttpOriginMatcher.*)
-
 /**
  * Used to serialize / deserialize the LocalDateTime type
  */
