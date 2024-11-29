@@ -1,30 +1,25 @@
 package be.unamur.cattracker.http
 
-
-import akka.actor.typed.ActorRef
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport.*
-import akka.http.scaladsl.model.*
-import akka.http.scaladsl.model.headers.RawHeader
-import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.server.{Directives, Route}
-import spray.json.DefaultJsonProtocol.*
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import be.unamur.cattracker.actors.DispenserScheduleDbActor.DispenserScheduleDbCommand
-import be.unamur.cattracker.actors.SensorValueDbActor
-import be.unamur.cattracker.actors.SensorValueDbActor.SensorValueDbCommand
-import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
-import spray.json.DefaultJsonProtocol.*
-import spray.json.RootJsonFormat
-import spray.json.*
+import akka.http.scaladsl.model.*
+import akka.http.scaladsl.server.Directives.*
+import akka.http.scaladsl.server.Route
 import be.unamur.cattracker.http.LocalDateTimeJsonProtocol.LocalDateTimeFormat
 import be.unamur.cattracker.http.LocalTimeJsonProtocol.LocalTimeFormat
+import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
+import com.typesafe.config.ConfigFactory
+import spray.json.*
 
-import java.time.{LocalDateTime, LocalTime}
 import java.time.format.{DateTimeFormatter, DateTimeParseException}
-import scala.concurrent.{ExecutionContext, Future}
+import java.time.{LocalDateTime, LocalTime}
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
+
+//val corsSettings: CorsSettings = CorsSettings.defaultSettings
+//  .withAllowedMethods(Seq(GET, POST, PUT, DELETE, OPTIONS))
+//  .withAllowedOrigins(HttpOriginMatcher.*)
 
 /**
  * Used to serialize / deserialize the LocalDateTime type
@@ -72,93 +67,97 @@ object DispenserScheduleUpdateDTOFormat extends SprayJsonSupport with DefaultJso
 }
 
 class ApiRoutes(sensorService: SensorService, dispenserScheduleService: DispenserScheduleService)(implicit ec: ExecutionContext) {
-  import akka.http.scaladsl.server.Directives._
-  import SensorValueFormat._
-  import DispenserScheduleFormat._
-  import DispenserScheduleUpdateDTOFormat._
 
-  val apiRoutes: Route = cors() {
-    path("api" / "sensor_values" / Segment) { sensorType =>
-      get {
-        parameters("start_date".optional, "end_date".optional) { (startDateStr, endDateStr) =>
-          try {
+  import DispenserScheduleFormat.*
+  import DispenserScheduleUpdateDTOFormat.*
+  import SensorValueFormat.*
+  import ch.megard.akka.http.cors.scaladsl.CorsDirectives.*
 
-            // Format yyyy-MM-ddTHH:mm:ss
-            val startDateOpt = startDateStr.flatMap(str => Try(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)).toOption)
-            val endDateOpt = endDateStr.flatMap(str => Try(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)).toOption)
+  private val corsSettings: CorsSettings = CorsSettings(ConfigFactory.load())
 
-            complete {
-              (startDateOpt, endDateOpt) match {
-                case (Some(startDate), Some(endDate)) =>
-                  sensorService.getAllSensorValuesBetween(sensorType, startDate, endDate).map { sensorValues =>
-                    sensorValues.toJson
+
+  val apiRoutes: Route = cors(corsSettings) {
+    pathPrefix("api") {
+        path("sensor_values" / Segment) { sensorType =>
+          concat(
+            options {
+              complete(StatusCodes.OK)
+            },
+            get {
+              parameters("start_date".optional, "end_date".optional) { (startDateStr, endDateStr) =>
+                try {
+                  val startDateOpt = startDateStr.flatMap(str => Try(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)).toOption)
+                  val endDateOpt = endDateStr.flatMap(str => Try(LocalDateTime.parse(str, DateTimeFormatter.ISO_LOCAL_DATE_TIME)).toOption)
+
+                  complete {
+                    (startDateOpt, endDateOpt) match {
+                      case (Some(startDate), Some(endDate)) =>
+                        sensorService.getAllSensorValuesBetween(sensorType, startDate, endDate).map(_.toJson)
+                      case (Some(startDate), None) =>
+                        sensorService.getAllSensorValuesBetween(sensorType, startDate, LocalDateTime.now()).map(_.toJson)
+                      case (None, Some(endDate)) =>
+                        sensorService.getAllSensorValuesBetween(sensorType, LocalDateTime.MIN, endDate).map(_.toJson)
+                      case _ =>
+                        sensorService.getAllSensorValues(sensorType).map(_.toJson)
+                    }
                   }
-                case (Some(startDate), None) =>
-                  sensorService.getAllSensorValuesBetween(sensorType, startDate, LocalDateTime.now()).map { sensorValues =>
-                    sensorValues.toJson
-                  }
-                case (None, Some(endDate)) =>
-                  sensorService.getAllSensorValuesBetween(sensorType, LocalDateTime.MIN, endDate).map { sensorValues =>
-                    sensorValues.toJson
-                  }
-                case _ =>
-                  sensorService.getAllSensorValues(sensorType).map { sensorValues =>
-                    sensorValues.toJson
-                  }
-              }
-            }
-          } catch {
-            case e: DateTimeParseException =>
-              complete(StatusCodes.BadRequest, "Invalid date format")
-          }
-        }
-      }
-    } ~ path("api" / "dispenser_schedules") {
-      concat(get {
-        parameters("label_contains".optional) { labelContains =>
-          complete {
-            dispenserScheduleService.getDispenserSchedules(labelContains).map { dispenserSchedules =>
-              dispenserSchedules.toJson
-            }
-          }
-        }
-      },
-        post {
-          entity(as[DispenserScheduleUpdateDTO]) { ds =>
-            complete {
-              dispenserScheduleService.addDispenserSchedule(ds).map { i =>
-                "Dispenser schedule inserted successfully"
-              }
-            }
-          }
-        })
-    } ~ path("api" / "dispenser_schedules" / Segment) { id =>
-      concat(put {
-        entity(as[DispenserScheduleUpdateDTO]) { ds =>
-          Try(id.toLong).toOption match {
-            case Some(_) =>
-              complete {
-                dispenserScheduleService.updateDispenserSchedule(id.toLong, ds).map { i =>
-                  s"Dispenser schedule ${id} updated successfully"
+                } catch {
+                  case _: DateTimeParseException =>
+                    complete(StatusCodes.BadRequest, "Invalid date format")
                 }
               }
-            case None =>
-              complete(StatusCodes.BadRequest, "Invalid id")
-          }
-        }
-      },
-        delete {
-          Try(id.toLong).toOption match {
-            case Some(_) =>
-              complete {
-                dispenserScheduleService.deleteDispenserSchedule(id.toLong).map { i =>
-                  s"Dispenser schedule ${id} deleted successfully"
+            })
+        } ~ path("dispenser_schedules") {
+          concat(
+            options {
+              complete(StatusCodes.OK)
+            },
+            get {
+              parameters("label_contains".optional) { labelContains =>
+                complete {
+                  dispenserScheduleService.getDispenserSchedules(labelContains).map { dispenserSchedules =>
+                    dispenserSchedules.toJson
+                  }
                 }
               }
-            case None =>
-              complete(StatusCodes.BadRequest, "Invalid id")
-          }
-        })
+            },
+            post {
+              entity(as[DispenserScheduleUpdateDTO]) { ds =>
+                complete {
+                  dispenserScheduleService.addDispenserSchedule(ds).map { i => "Dispenser schedule inserted successfully" }
+                }
+              }
+            }
+          )
+        } ~ path("dispenser_schedules" / Segment) { id =>
+          concat(
+            options {
+              complete(StatusCodes.OK)
+            },
+            put {
+              entity(as[DispenserScheduleUpdateDTO]) { ds =>
+                Try(id.toLong).toOption match {
+                  case Some(_) =>
+                    complete {
+                      dispenserScheduleService.updateDispenserSchedule(id.toLong, ds).map(_ => s"Dispenser schedule $id updated successfully")
+                    }
+                  case None =>
+                    complete(StatusCodes.BadRequest, "Invalid id")
+                }
+              }
+            },
+            delete {
+              Try(id.toLong).toOption match {
+                case Some(_) =>
+                  complete {
+                    dispenserScheduleService.deleteDispenserSchedule(id.toLong).map(_ => s"Dispenser schedule $id deleted successfully")
+                  }
+                case None =>
+                  complete(StatusCodes.BadRequest, "Invalid id")
+              }
+            }
+          )
+        }
     }
   }
 }

@@ -22,6 +22,7 @@ import scala.util.*
 
 object Main {
   private final val conf = ConfigFactory.load()
+  private val httpAddress = conf.getString("cat-tracker.http.ip")
   private val httpPort = conf.getInt("cat-tracker.http.port")
   private val db = Database.forConfig("cat-tracker.postgres")
 
@@ -51,7 +52,7 @@ object Main {
     val apiRoutes = ApiRoutes(sensorService, dispenserScheduleService)
     val httpServer = ApiHttpServer(apiRoutes)
     
-    httpServer.startServer(httpPort)
+    httpServer.startServer(httpAddress, httpPort)
   }
 }
 

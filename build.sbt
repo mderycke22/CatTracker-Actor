@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-http" % "10.7.0",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.7.0",
   "org.scalatest" %% "scalatest" % ScalaTestVersion % "test",
-  "org.postgresql" % "postgresql" % "42.7.3"
+  "org.postgresql" % "postgresql" % "42.7.3",
+  "ch.megard" %% "akka-http-cors" % "1.2.0" excludeAll ExclusionRule(organization = "com.typesafe.akka")
 )
 
 
