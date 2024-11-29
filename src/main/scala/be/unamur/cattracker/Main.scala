@@ -2,7 +2,9 @@ package be.unamur.cattracker
 
 import akka.actor.typed.*
 import akka.actor.typed.scaladsl.Behaviors
-import be.unamur.cattracker.actors.SensorValueDbActor
+import akka.util.ByteString
+import akka.util.ByteString.ByteStrings
+import be.unamur.cattracker.actors.{MqttDeviceActor, SensorValueDbActor}
 
 import scala.concurrent.ExecutionContext
 //import akka.actor.{ActorSystem, Props}
@@ -20,8 +22,6 @@ import scala.util.*
 
 object Main {
   private final val conf = ConfigFactory.load()
-  private val mqttPort = conf.getLong("cat-tracker.mqtt.port")
-  private val mqttAddress = conf.getString("cat-tracker.mqtt.ip")
   private val httpPort = conf.getInt("cat-tracker.http.port")
   private val db = Database.forConfig("cat-tracker.postgres")
 
@@ -40,6 +40,10 @@ object Main {
     val sensorValueRepositoryImpl = SensorRepositoryImpl(db)
     val dsDbActor = system.systemActorOf(DispenserScheduleDbActor(dispenserScheduleRepositoryImpl), "DispenserScheduleDbActor")
     val svDbActor = system.systemActorOf(SensorValueDbActor(sensorValueRepositoryImpl), "SensorValueDbActor")
+    val remoteMqttActor = system.systemActorOf(MqttDeviceActor("testtopic/a"), "MqttDeviceActor")
+    remoteMqttActor ! MqttDeviceActor.MqttSubscribe(println)
+    remoteMqttActor ! MqttDeviceActor.MqttPublish(ByteString("Hello from CatTracker!"))
+    remoteMqttActor ! MqttDeviceActor.MqttPublish(ByteString("Hello from CatTracker again!"))
 
     // Http
     val dispenserScheduleService = DispenserScheduleService(dsDbActor)
