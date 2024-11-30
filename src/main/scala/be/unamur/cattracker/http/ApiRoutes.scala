@@ -16,11 +16,6 @@ import java.time.{LocalDateTime, LocalTime}
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-
-//val corsSettings: CorsSettings = CorsSettings.defaultSettings
-//  .withAllowedMethods(Seq(GET, POST, PUT, DELETE, OPTIONS))
-//  .withAllowedOrigins(HttpOriginMatcher.*)
-
 /**
  * Used to serialize / deserialize the LocalDateTime type
  */
@@ -78,7 +73,6 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
 
   val apiRoutes: Route = cors(corsSettings) {
     pathPrefix("api") {
-      concat(
         path("sensor_values" / Segment) { sensorType =>
           concat(
             options {
@@ -107,10 +101,8 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
                     complete(StatusCodes.BadRequest, "Invalid date format")
                 }
               }
-            }
-          )
-        },
-        path("dispenser_schedules") {
+            })
+        } ~ path("dispenser_schedules") {
           concat(
             options {
               complete(StatusCodes.OK)
@@ -118,25 +110,21 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             get {
               parameters("label_contains".optional) { labelContains =>
                 complete {
-                  labelContains match {
-                    case Some(value) =>
-                      dispenserScheduleService.getDispenserSchedules(value).map(_.toJson)
-                    case None =>
-                      dispenserScheduleService.getDispenserSchedules(null).map(_.toJson)
+                  dispenserScheduleService.getDispenserSchedules(labelContains).map { dispenserSchedules =>
+                    dispenserSchedules.toJson
                   }
                 }
               }
             },
             post {
-              entity(as[DispenserSchedule]) { ds =>
+              entity(as[DispenserScheduleUpdateDTO]) { ds =>
                 complete {
-                  dispenserScheduleService.addDispenserSchedule(ds).map(_ => "Dispenser schedule inserted successfully")
+                  dispenserScheduleService.addDispenserSchedule(ds).map { i => "Dispenser schedule inserted successfully" }
                 }
               }
             }
           )
-        },
-        path("dispenser_schedules" / Segment) { id =>
+        } ~ path("dispenser_schedules" / Segment) { id =>
           concat(
             options {
               complete(StatusCodes.OK)
@@ -165,7 +153,6 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             }
           )
         }
-      )
     }
   }
 }

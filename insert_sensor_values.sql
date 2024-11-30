@@ -5,6 +5,17 @@ INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) V
 INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('weight', 3.77, '2024-11-01 00:00:40', 'kg');
 INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('weight', 5.68, '2024-11-01 00:00:50', 'kg');
 
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('weight', 5, '2024-11-25 00:00:00', 'kg');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('weight', 9, '2024-11-27 00:00:10', 'kg');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('weight', 6, '2024-11-28 00:00:20', 'kg');
+
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('humidity', 20, '2024-11-01 00:00:00', '%');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('humidity', 50, '2024-11-01 00:00:10', '%');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('humidity', 40, '2024-11-01 00:00:20', '%');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('humidity', 70, '2024-11-01 00:00:30', '%');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('humidity', 80, '2024-11-01 00:00:40', '%');
+INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('humidity', 75, '2024-11-01 00:00:50', '%');
+
 
 INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('temperature', 20.05, '2024-11-01 00:00:00', 'C');
 INSERT INTO sensor_values (sensor_type, sensor_value, recorded_at, value_unit) VALUES ('temperature', 19.47, '2024-11-01 00:00:10', 'C');
