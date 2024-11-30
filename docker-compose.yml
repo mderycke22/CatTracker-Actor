@@ -5,13 +5,21 @@ services:
       network: host
     network_mode: "host"
 
+  broker:
+    image: eclipse-mosuqitto
+    volumes:
+      - ./mqtt:/mosquitto/config 
+    ports:
+      - 1833:1833 
+      - 8080:8080
+
   db:
     image: postgres
     restart: always
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=cattracker
