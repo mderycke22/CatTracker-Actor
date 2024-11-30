@@ -4,9 +4,11 @@ services:
       dockerfile: ./Dockerfile
       network: host
     network_mode: "host"
+    restart: always
 
   broker:
-    image: eclipse-mosuqitto
+    image: eclipse-mosquitto
+    restart: always
     volumes:
       - ./mqtt:/mosquitto/config 
     ports:
