@@ -3,15 +3,12 @@ package be.unamur.cattracker
 import akka.actor.typed.*
 import akka.actor.typed.scaladsl.Behaviors
 import akka.util.ByteString
-import akka.util.ByteString.ByteStrings
 import be.unamur.cattracker.actors.{MqttDeviceActor, SensorValueDbActor}
 
 import scala.concurrent.ExecutionContext
 import akka.actor as classic
-import akka.http.scaladsl.Http
 import be.unamur.cattracker.actors.MqttDeviceActor.{MqttPublish, MqttSubscribe}
-import be.unamur.cattracker.actors.SensorValueDbActor.Insert
-import be.unamur.cattracker.actors.{DatabaseAccessActor, DispenserScheduleDbActor}
+import be.unamur.cattracker.actors.DispenserScheduleDbActor
 import be.unamur.cattracker.http.{ApiHttpServer, ApiRoutes, DispenserScheduleService, SensorService}
 import be.unamur.cattracker.model.SensorValue
 import be.unamur.cattracker.repositories.{DispenserScheduleRepositoryImpl, SensorRepositoryImpl}
@@ -19,10 +16,7 @@ import be.unamur.cattracker.utils.DataUtils
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.PostgresProfile.api.*
 
-import java.net.InetSocketAddress
 import java.time.LocalDateTime
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.*
 
 object Main {
   private final val conf = ConfigFactory.load()
