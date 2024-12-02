@@ -156,7 +156,7 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
               }
             }
           )
-        } ~ path("dispenser_schedules" / "distribute") {
+        } ~ path("distribution") {
           concat(
             options {
               complete(StatusCodes.OK)
