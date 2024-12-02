@@ -38,6 +38,7 @@ object Main {
   private val mqttAddress = conf.getString("cat-tracker.mqtt.ip")
   private val brokerUrl = s"tcp://${mqttAddress}:${mqttPort}"
 
+
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "CatTrackerSystem")
     implicit val executionContext: ExecutionContext = system.executionContext
@@ -47,12 +48,6 @@ object Main {
     val dsDbActor = system.systemActorOf(DispenserScheduleDbActor(dispenserScheduleRepositoryImpl), "DispenserScheduleDbActor")
     val svDbActor = system.systemActorOf(SensorValueDbActor(sensorValueRepositoryImpl), "SensorValueDbActor")
 
-    // Http
-    val dispenserScheduleService = DispenserScheduleService(dsDbActor)
-    val sensorService = SensorService(svDbActor)
-    val apiRoutes = ApiRoutes(sensorService, dispenserScheduleService)
-    val httpServer = ApiHttpServer(apiRoutes)
-
     // Mqtt
     val connectionSettings: MqttConnectionSettings = MqttConnectionSettings(
       brokerUrl,
@@ -61,13 +56,7 @@ object Main {
     ).withCleanSession(true)
       .withAutomaticReconnect(true)
 
-    val subscribeTopics: List[String] = List(
-      "cattracker/weight/sensor_outputs",
-      "cattracker/temp_hum/sensor_outputs",
-      "cattracker/kibbles/sensor_outputs"
-    )
-
-    val subscriptionsMap: Map[String, MqttQoS] = subscribeTopics.map(topic => topic -> MqttQoS.AtLeastOnce).toMap
+    val subscriptionsMap: Map[String, MqttQoS] = CatTrackerConstants.subscribeTopics.map(topic => topic -> MqttQoS.AtLeastOnce).toMap
 
     val mqttSink: Sink[MqttMessage, Future[Done]] = MqttSink(connectionSettings, MqttQoS.AtLeastOnce)
     val mqttSource: Source[MqttMessage, Future[Done]] = {
@@ -77,9 +66,15 @@ object Main {
         bufferSize = 8
       )
     }
-    val actor = system.systemActorOf(MqttDeviceActor(mqttSink, mqttSource), "MqttSubscriptionActor")
+    val mqttActor = system.systemActorOf(MqttDeviceActor(mqttSink, mqttSource), "MqttActor")
 
-    actor ! MqttSubscribe(message => sensorValueSubscriptionCallback(message, sensorService))
+    // Http and services
+    val dispenserScheduleService = DispenserScheduleService(dsDbActor, mqttActor)
+    val sensorService = SensorService(svDbActor, mqttActor)
+    val apiRoutes = ApiRoutes(sensorService, dispenserScheduleService)
+    val httpServer = ApiHttpServer(apiRoutes)
+
+    mqttActor ! MqttSubscribe(message => sensorValueSubscriptionCallback(message, sensorService))
 
     httpServer.startServer(httpAddress, httpPort)
   }

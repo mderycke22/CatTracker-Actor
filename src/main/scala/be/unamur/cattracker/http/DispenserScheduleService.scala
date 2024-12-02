@@ -6,13 +6,15 @@ import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO
 import akka.actor.typed.scaladsl.AskPattern.*
 
 import scala.concurrent.{ExecutionContext, Future}
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
+import be.unamur.cattracker.{CatTrackerConstants}
 import be.unamur.cattracker.actors.DispenserScheduleDbActor
+import be.unamur.cattracker.actors.MqttDeviceActor.{MqttCommand, MqttPublish}
 
 import scala.concurrent.duration.DurationInt
 import scala.util.Failure
 
-class DispenserScheduleService(dsDbActor: ActorRef[DispenserScheduleDbCommand])
+class DispenserScheduleService(dsDbActor: ActorRef[DispenserScheduleDbCommand], mqttPublishActor: ActorRef[MqttCommand])
                               (implicit val system: ActorSystem[Nothing], val ec: ExecutionContext) {
 
   implicit val timeout: Timeout = 5.seconds
@@ -60,5 +62,9 @@ class DispenserScheduleService(dsDbActor: ActorRef[DispenserScheduleDbCommand])
         system.log.error(s"Couldn't delete the dispenser schedule: $message")
         throw new IllegalArgumentException("Couldn't delete the dispenser schedule due to: " + message)
     }
+  }
+
+  def distributeKibbles(amount: Int): Unit = {
+    mqttPublishActor ! MqttPublish(CatTrackerConstants.publishTopics("kibbles"), ByteString(s"open;${amount}"))
   }
 }

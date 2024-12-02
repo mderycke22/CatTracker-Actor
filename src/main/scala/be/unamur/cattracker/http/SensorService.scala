@@ -6,14 +6,16 @@ import be.unamur.cattracker.actors.SensorValueDbActor
 import be.unamur.cattracker.actors.SensorValueDbActor.SensorValueDbCommand
 import be.unamur.cattracker.model.SensorValue
 import akka.actor.typed.scaladsl.AskPattern.*
-import akka.util.Timeout
-import scala.util.{Success, Failure}
+import akka.util.{ByteString, Timeout}
+import be.unamur.cattracker.{CatTrackerConstants, Main}
+import be.unamur.cattracker.actors.MqttDeviceActor.{MqttCommand, MqttPublish}
 
+import scala.util.{Failure, Success}
 import scala.concurrent.duration.DurationInt
 import java.time.LocalDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
-class SensorService(svDbActor: ActorRef[SensorValueDbCommand])
+class SensorService(svDbActor: ActorRef[SensorValueDbCommand], mqttPublishActor: ActorRef[MqttCommand])
                    (implicit val system: ActorSystem[Nothing], val ec: ExecutionContext) {
 
   implicit val timeout: Timeout = 5.seconds
@@ -49,5 +51,9 @@ class SensorService(svDbActor: ActorRef[SensorValueDbCommand])
         system.log.error(s"Error getting the sensor values: $message")
         0
     }
+  }
+  
+  def resetWeightSensor(): Unit = {
+    mqttPublishActor ! MqttPublish(CatTrackerConstants.publishTopics("weight"), ByteString("reset"))
   }
 }
