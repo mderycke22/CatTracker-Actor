@@ -12,6 +12,7 @@ services:
       - ./mqtt:/mosquitto/config 
     ports:
       - 1883:1883
+      - 8080:8080
 
   db:
     image: postgres
