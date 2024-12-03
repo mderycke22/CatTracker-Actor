@@ -123,7 +123,10 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             post {
               entity(as[DispenserScheduleUpdateDTO]) { ds =>
                 complete {
-                  dispenserScheduleService.addDispenserSchedule(ds).map { i => "Dispenser schedule inserted successfully" }
+                  dispenserScheduleService.addDispenserSchedule(ds).map { i =>
+                    dispenserScheduleService.sendAllDistributionSchedules()
+                    "Dispenser schedule inserted successfully"
+                  }
                 }
               }
             }

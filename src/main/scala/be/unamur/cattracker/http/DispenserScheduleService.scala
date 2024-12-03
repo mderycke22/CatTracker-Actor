@@ -67,4 +67,19 @@ class DispenserScheduleService(dsDbActor: ActorRef[DispenserScheduleDbCommand], 
   def distributeKibbles(amount: Int): Unit = {
     mqttPublishActor ! MqttPublish(CatTrackerConstants.publishTopics("kibbles"), ByteString(s"open;${amount}"))
   }
+
+  def sendAllDistributionSchedules(): Unit = {
+    val allDistributionSchedules = dsDbActor.ask(ref => DispenserScheduleDbActor.Select(None, ref)).map {
+      case DispenserScheduleDbActor.Retrieved(values) =>
+        system.log.info("Dispenser schedules retrieved successfully")
+        val allSchedulesForMqtt: String =
+          values
+            .map(ds => s"${ds.distributionTime.getHour}:${ds.distributionTime.getMinute};${ds.kibblesAmountValue}")
+            .mkString(",")
+        system.log.info("Sending all dispenser schedules to the device: {}", allSchedulesForMqtt)
+        mqttPublishActor ! MqttPublish(CatTrackerConstants.publishTopics("kibbles"), ByteString(allSchedulesForMqtt))
+      case DispenserScheduleDbActor.NotRetrieved(message) =>
+        system.log.error(s"Error getting the dispenser schedules: $message")
+    }
+  }
 }

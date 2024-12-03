@@ -75,6 +75,7 @@ object Main {
     val httpServer = ApiHttpServer(apiRoutes)
 
     mqttActor ! MqttSubscribe(message => sensorValueSubscriptionCallback(message, sensorService))
+    dispenserScheduleService.sendAllDistributionSchedules()
 
     httpServer.startServer(httpAddress, httpPort)
   }
