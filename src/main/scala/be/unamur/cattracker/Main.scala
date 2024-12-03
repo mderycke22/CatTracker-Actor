@@ -5,9 +5,9 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.util.ByteString
 import be.unamur.cattracker.actors.{MqttDeviceActor, SensorValueDbActor}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import akka.actor as classic
-import be.unamur.cattracker.actors.MqttDeviceActor.{MqttPublish, MqttSubscribe}
+import be.unamur.cattracker.actors.MqttDeviceActor.{MqttCommand, MqttPublish, MqttSubscribe}
 import be.unamur.cattracker.actors.DispenserScheduleDbActor
 import be.unamur.cattracker.http.{ApiHttpServer, ApiRoutes, DispenserScheduleService, SensorService}
 import be.unamur.cattracker.model.SensorValue
@@ -15,6 +15,17 @@ import be.unamur.cattracker.repositories.{DispenserScheduleRepositoryImpl, Senso
 import be.unamur.cattracker.utils.DataUtils
 import com.typesafe.config.ConfigFactory
 import slick.jdbc.PostgresProfile.api.*
+import akka.{Done, NotUsed}
+import akka.actor.typed.{ActorSystem, Behavior}
+import akka.actor.typed.scaladsl.Behaviors
+import akka.stream.alpakka.mqtt.{MqttConnectionSettings, MqttMessage, MqttQoS, MqttSubscriptions}
+import akka.stream.alpakka.mqtt.scaladsl.{MqttFlow, MqttMessageWithAck, MqttSink, MqttSource}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.util.ByteString
+import be.unamur.cattracker.Main.conf
+import com.typesafe.config.ConfigFactory
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+import akka.stream.scaladsl.MergeHub.source
 
 import java.time.LocalDateTime
 
@@ -23,6 +34,10 @@ object Main {
   private val httpAddress = conf.getString("cat-tracker.http.ip")
   private val httpPort = conf.getInt("cat-tracker.http.port")
   private val db = Database.forConfig("cat-tracker.postgres")
+  private val mqttPort = conf.getLong("cat-tracker.mqtt.port")
+  private val mqttAddress = conf.getString("cat-tracker.mqtt.ip")
+  private val brokerUrl = s"tcp://${mqttAddress}:${mqttPort}"
+
 
   def main(args: Array[String]): Unit = {
     implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.empty, "CatTrackerSystem")
@@ -33,31 +48,42 @@ object Main {
     val dsDbActor = system.systemActorOf(DispenserScheduleDbActor(dispenserScheduleRepositoryImpl), "DispenserScheduleDbActor")
     val svDbActor = system.systemActorOf(SensorValueDbActor(sensorValueRepositoryImpl), "SensorValueDbActor")
 
-    // Http
-    val dispenserScheduleService = DispenserScheduleService(dsDbActor)
-    val sensorService = SensorService(svDbActor)
+    // Mqtt
+    val connectionSettings: MqttConnectionSettings = MqttConnectionSettings(
+      brokerUrl,
+      "cattracker-backend",
+      new MemoryPersistence,
+    ).withCleanSession(true)
+      .withAutomaticReconnect(true)
+
+    val subscriptionsMap: Map[String, MqttQoS] = CatTrackerConstants.subscribeTopics.map(topic => topic -> MqttQoS.AtLeastOnce).toMap
+
+    val mqttSink: Sink[MqttMessage, Future[Done]] = MqttSink(connectionSettings, MqttQoS.AtLeastOnce)
+    val mqttSource: Source[MqttMessage, Future[Done]] = {
+      MqttSource.atMostOnce(
+        connectionSettings.withClientId(clientId = "cattracker/backend"),
+        MqttSubscriptions(subscriptionsMap),
+        bufferSize = 8
+      )
+    }
+    val mqttActor = system.systemActorOf(MqttDeviceActor(mqttSink, mqttSource), "MqttActor")
+
+    // Http and services
+    val dispenserScheduleService = DispenserScheduleService(dsDbActor, mqttActor)
+    val sensorService = SensorService(svDbActor, mqttActor)
     val apiRoutes = ApiRoutes(sensorService, dispenserScheduleService)
     val httpServer = ApiHttpServer(apiRoutes)
 
-    // Mqtt
-    val mqttWeightValuesActor = system.systemActorOf(MqttDeviceActor("cattracker/weight/sensor_outputs"), "MqttWeightActor")
-    val mqttWeightResetActor = system.systemActorOf(MqttDeviceActor("cattracker/weight/reset"), "MqttWeightResetActor")
+    mqttActor ! MqttSubscribe(message => sensorValueSubscriptionCallback(message, sensorService))
+    dispenserScheduleService.sendAllDistributionSchedules()
 
-    val mqttTemperatureHumidityActor = system.systemActorOf(MqttDeviceActor("cattracker/temp_hum/sensor_outputs"), "MqttTempHumActor")
-
-    val mqttKibblesDistribActor = system.systemActorOf(MqttDeviceActor("cattracker/kibbles/distribution"), "MqttDistribActor")
-
-    val mqttTemperatureHumidityBackActor = system.systemActorOf(MqttDeviceActor("cattracker/temp_hum/backend_output"), "MqttTempHumBackActor")
-    val mqttWeightBackActor = system.systemActorOf(MqttDeviceActor("cattracker/weight/backend_output"), "MqttWeightBackActor")
-
-    mqttWeightValuesActor ! MqttSubscribe(message => {
-      val sensorData = DataUtils.splitSensorData(message)
-      val sensorValue = SensorValue(sensorData("sensor"), DataUtils.castToFloat(sensorData("value")), sensorData("unit"), LocalDateTime.now())
-      sensorService.addSensorValue(sensorValue)
-      mqttWeightBackActor ! MqttPublish(ByteString(message))
-    })
-    
     httpServer.startServer(httpAddress, httpPort)
+  }
+
+  private def sensorValueSubscriptionCallback(message: String, sensorService: SensorService) = {
+    val sensorData = DataUtils.splitSensorData(message)
+    val sensorValue = SensorValue(sensorData("sensor"), DataUtils.castToFloat(sensorData("value")), sensorData("unit"), LocalDateTime.now())
+    sensorService.addSensorValue(sensorValue)
   }
 }
 

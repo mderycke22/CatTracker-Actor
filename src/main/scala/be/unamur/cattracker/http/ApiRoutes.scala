@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.Route
 import be.unamur.cattracker.http.LocalDateTimeJsonProtocol.LocalDateTimeFormat
 import be.unamur.cattracker.http.LocalTimeJsonProtocol.LocalTimeFormat
-import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, SensorValue}
+import be.unamur.cattracker.model.{DispenserSchedule, DispenserScheduleUpdateDTO, DistributionDTO, SensorValue}
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.config.ConfigFactory
 import spray.json.*
@@ -61,15 +61,19 @@ object DispenserScheduleUpdateDTOFormat extends SprayJsonSupport with DefaultJso
   implicit val dispenserValueFormat: RootJsonFormat[DispenserScheduleUpdateDTO] = jsonFormat3(DispenserScheduleUpdateDTO)
 }
 
+object DistributionDTOFormat extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit val distributionAmount: RootJsonFormat[DistributionDTO] = jsonFormat1(DistributionDTO)
+}
+
 class ApiRoutes(sensorService: SensorService, dispenserScheduleService: DispenserScheduleService)(implicit ec: ExecutionContext) {
 
   import DispenserScheduleFormat.*
   import DispenserScheduleUpdateDTOFormat.*
   import SensorValueFormat.*
+  import DistributionDTOFormat.*
   import ch.megard.akka.http.cors.scaladsl.CorsDirectives.*
 
   private val corsSettings: CorsSettings = CorsSettings(ConfigFactory.load())
-
 
   val apiRoutes: Route = cors(corsSettings) {
     pathPrefix("api") {
@@ -119,7 +123,10 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
             post {
               entity(as[DispenserScheduleUpdateDTO]) { ds =>
                 complete {
-                  dispenserScheduleService.addDispenserSchedule(ds).map { i => "Dispenser schedule inserted successfully" }
+                  dispenserScheduleService.addDispenserSchedule(ds).map { i =>
+                    dispenserScheduleService.sendAllDistributionSchedules()
+                    "Dispenser schedule inserted successfully"
+                  }
                 }
               }
             }
@@ -149,6 +156,37 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
                   }
                 case None =>
                   complete(StatusCodes.BadRequest, "Invalid id")
+              }
+            }
+          )
+        } ~ path("distribution") {
+          concat(
+            options {
+              complete(StatusCodes.OK)
+            },
+            post {
+              entity(as[DistributionDTO]) { distribution =>
+                val kibblesAmountValue = distribution.kibblesAmountValue
+                if(kibblesAmountValue < 1 || kibblesAmountValue > 5) {
+                  complete(StatusCodes.BadRequest, "Invalid kibbles amount. The amount must be between 1 and 5.")
+                } else {
+                  complete {
+                    dispenserScheduleService.distributeKibbles(kibblesAmountValue)
+                    "Kibbles distribution sent"
+                  }
+                }
+              }
+            }
+          )
+        } ~ path("weight" / "reset") {
+          concat(
+            options {
+              complete(StatusCodes.OK)
+            },
+            post {
+              complete {
+                sensorService.resetWeightSensor()
+                "Weight sensor reset sent"
               }
             }
           )

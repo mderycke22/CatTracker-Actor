@@ -15,3 +15,5 @@ class DispenserScheduleTable(tag: Tag) extends Table[DispenserSchedule](tag, "di
 case class DispenserSchedule(id: Long, distributionTime: LocalTime, kibblesAmountValue: Int, label: String)
 
 case class DispenserScheduleUpdateDTO(distributionTime: LocalTime, kibblesAmountValue: Int, label: String)
+
+case class DistributionDTO(kibblesAmountValue: Int)
