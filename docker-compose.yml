@@ -2,8 +2,9 @@ services:
   scala-api:
     build:
       dockerfile: ./Dockerfile
-      network: host
     restart: always
+    ports:
+      - 8081:8081
 
   broker:
     image: eclipse-mosquitto
