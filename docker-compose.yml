@@ -3,7 +3,6 @@ services:
     build:
       dockerfile: ./Dockerfile
       network: host
-    network_mode: "host"
     restart: always
 
   broker:
