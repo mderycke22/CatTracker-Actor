@@ -25,10 +25,7 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <root level="INFO">
-        <appender-ref ref="ASYNC"/>
-    </root>
-    <root level="ERROR">
+    <root level="DEBUG">
         <appender-ref ref="ASYNC"/>
     </root>
 </configuration>
