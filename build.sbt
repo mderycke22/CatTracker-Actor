@@ -30,7 +30,9 @@ libraryDependencies ++= Seq(
 
 
 assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case "reference.conf" => MergeStrategy.concat
-  case _ => MergeStrategy.first
+  case r if r.startsWith("reference.conf") => MergeStrategy.concat
+  case manifest if manifest.contains("MANIFEST.MF") => MergeStrategy.discard
+  case referenceOverrides
+    if referenceOverrides.contains("reference-overrides.conf") => MergeStrategy.concat
+  case x => MergeStrategy.first
 }
