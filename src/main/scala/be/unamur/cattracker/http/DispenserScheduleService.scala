@@ -7,10 +7,11 @@ import akka.actor.typed.scaladsl.AskPattern.*
 
 import scala.concurrent.{ExecutionContext, Future}
 import akka.util.{ByteString, Timeout}
-import be.unamur.cattracker.{CatTrackerConstants}
+import be.unamur.cattracker.CatTrackerConstants
 import be.unamur.cattracker.actors.DispenserScheduleDbActor
 import be.unamur.cattracker.actors.MqttDeviceActor.{MqttCommand, MqttPublish}
 
+import java.time.LocalTime
 import scala.concurrent.duration.DurationInt
 import scala.util.Failure
 
@@ -74,7 +75,7 @@ class DispenserScheduleService(dsDbActor: ActorRef[DispenserScheduleDbCommand], 
         system.log.info("Dispenser schedules retrieved successfully")
         val allSchedulesForMqtt: String =
           values
-            .map(ds => s"${ds.distributionTime.getHour}:${ds.distributionTime.getMinute};${ds.kibblesAmountValue}")
+            .map(ds => s"${ds.distributionTime.getMinute} ${ds.distributionTime.getHour} * * *;${ds.kibblesAmountValue}")
             .mkString(",")
         system.log.info("Sending all dispenser schedules to the device: {}", allSchedulesForMqtt)
         mqttPublishActor ! MqttPublish(CatTrackerConstants.publishTopics("kibbles"), ByteString(allSchedulesForMqtt))
