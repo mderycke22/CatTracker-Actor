@@ -28,8 +28,7 @@ libraryDependencies ++= Seq(
   "ch.megard" %% "akka-http-cors" % "1.2.0" excludeAll ExclusionRule(organization = "com.typesafe.akka")
 )
 
-
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case r if r.startsWith("reference.conf") => MergeStrategy.concat
   case manifest if manifest.contains("MANIFEST.MF") => MergeStrategy.discard
   case referenceOverrides

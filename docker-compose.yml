@@ -1,6 +1,19 @@
-version: '3.9'
-
 services:
+  scala-api:
+    build:
+      dockerfile: ./Dockerfile
+    restart: always
+    ports:
+      - 8081:8081
+
+  broker:
+    image: eclipse-mosquitto
+    restart: always
+    volumes:
+      - ./mqtt:/mosquitto/config 
+    ports:
+      - 1883:1883
+      - 8080:8080
 
   db:
     image: postgres
@@ -8,7 +21,7 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - 5432:5432
     environment:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=cattracker
