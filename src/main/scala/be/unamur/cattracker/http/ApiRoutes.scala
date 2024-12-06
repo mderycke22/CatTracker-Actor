@@ -141,7 +141,10 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
                 Try(id.toLong).toOption match {
                   case Some(_) =>
                     complete {
-                      dispenserScheduleService.updateDispenserSchedule(id.toLong, ds).map(_ => s"Dispenser schedule $id updated successfully")
+                      dispenserScheduleService.updateDispenserSchedule(id.toLong, ds).map(_ =>
+                        dispenserScheduleService.sendAllDistributionSchedules()
+                        s"Dispenser schedule $id updated successfully"
+                      )
                     }
                   case None =>
                     complete(StatusCodes.BadRequest, "Invalid id")
@@ -152,7 +155,10 @@ class ApiRoutes(sensorService: SensorService, dispenserScheduleService: Dispense
               Try(id.toLong).toOption match {
                 case Some(_) =>
                   complete {
-                    dispenserScheduleService.deleteDispenserSchedule(id.toLong).map(_ => s"Dispenser schedule $id deleted successfully")
+                    dispenserScheduleService.deleteDispenserSchedule(id.toLong).map(_ =>
+                      dispenserScheduleService.sendAllDistributionSchedules()
+                      s"Dispenser schedule $id deleted successfully"
+                    )
                   }
                 case None =>
                   complete(StatusCodes.BadRequest, "Invalid id")
