@@ -36,7 +36,8 @@ services:
 
   dashboard:
     build:
-      dockerfile: ./dashboard/Dockerfile
+      context: ./dashboard
+      dockerfile: Dockerfile
     restart: always
     ports:
       - 8000:80
