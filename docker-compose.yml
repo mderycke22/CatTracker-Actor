@@ -40,4 +40,4 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - 8000:80
+      - 80:80
